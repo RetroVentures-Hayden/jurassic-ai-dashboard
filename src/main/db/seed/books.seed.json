@@ -1,0 +1,191 @@
+[
+  {
+    "title": "Jurassic Park",
+    "author": "Michael Crichton",
+    "category": "novel",
+    "source_url": "https://www.amazon.com/Jurassic-Park-Michael-Crichton/dp/0345374916",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0345374916-L.jpg",
+    "description": "The original 1990 novel by Michael Crichton that started the franchise, published by Alfred A. Knopf.",
+    "publish_year": 1990
+  },
+  {
+    "title": "The Lost World",
+    "author": "Michael Crichton",
+    "category": "novel",
+    "source_url": "https://www.amazon.com/Lost-World-Michael-Crichton/dp/0679419462",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0679419462-L.jpg",
+    "description": "Crichton's 1995 sequel to Jurassic Park, and the only sequel he ever wrote to one of his own novels.",
+    "publish_year": 1995
+  },
+  {
+    "title": "Michael Crichton's Jurassic World (Omnibus)",
+    "author": "Michael Crichton",
+    "category": "novel",
+    "source_url": "https://www.amazon.com/Michael-Crichtons-Jurassic-World-Crichton/dp/0375401075",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780375401077-L.jpg",
+    "description": "A single-volume omnibus edition combining Crichton's Jurassic Park and The Lost World, unrelated to the 2015 Jurassic World film.",
+    "publish_year": null
+  },
+  {
+    "title": "Jurassic Park: The Junior Novelization",
+    "author": "Gail Herman",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Jurassic-Park-Junior-Novelization-Herman/dp/044840172X",
+    "image_url": "https://covers.openlibrary.org/b/isbn/044840172X-L.jpg",
+    "description": "A junior-reader adaptation of the 1993 film, written by Gail Herman (US edition, Grosset & Dunlap).",
+    "publish_year": 1993
+  },
+  {
+    "title": "The Lost World: Jurassic Park -- Site B: The Junior Novelization",
+    "author": "Gail Herman",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Lost-World-Jurassic-Junior-Novelization/dp/0448415763",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0448415763-L.jpg",
+    "description": "A junior-reader adaptation of The Lost World: Jurassic Park (1997), written by Gail Herman.",
+    "publish_year": 1997
+  },
+  {
+    "title": "Jurassic Park III: The Junior Novelization",
+    "author": "Scott Ciencin",
+    "category": "junior_novelization",
+    "source_url": "https://us.amazon.com/Jurassic-Park-III-Junior-Novelization/dp/0375813187",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0375813187-L.jpg",
+    "description": "A junior-reader adaptation of Jurassic Park III (2001), written by Scott Ciencin.",
+    "publish_year": 2001
+  },
+  {
+    "title": "Jurassic World: Special Edition Junior Novelization",
+    "author": "David Lewman",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/JURASSIC-WORLD-SPECI-David-Lewman/dp/0553536907",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780553536911-L.jpg",
+    "description": "A junior-reader retelling of Jurassic World (2015) for ages 8-12, with color scenes from the film.",
+    "publish_year": 2015
+  },
+  {
+    "title": "Jurassic World: Fallen Kingdom: The Deluxe Junior Novelization",
+    "author": "David Lewman",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Jurassic-World-Fallen-Kingdom-Novelization/dp/0525580743",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0525580743-L.jpg",
+    "description": "A hardcover junior-reader retelling of Jurassic World: Fallen Kingdom (2018), with a pull-out poster.",
+    "publish_year": 2018
+  },
+  {
+    "title": "Jurassic World Dominion: The Junior Novelization",
+    "author": "Random House",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Jurassic-World-Dominion-Junior-Novelization/dp/0593310640",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0593310640-L.jpg",
+    "description": "Paperback junior-reader retelling of Jurassic World Dominion (2022).",
+    "publish_year": 2022
+  },
+  {
+    "title": "Jurassic World Dominion: The Deluxe Junior Novelization",
+    "author": "Random House",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Jurassic-World-Dominion-Deluxe-Novelization/dp/0593310632",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780593310632-L.jpg",
+    "description": "Hardcover deluxe edition junior-reader retelling of Jurassic World Dominion (2022), with color insert and poster.",
+    "publish_year": 2022
+  },
+  {
+    "title": "Camp Cretaceous, Volume One: The Deluxe Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Camp-Cretaceous-One-Novelization-Jurassic/dp/0593303385",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780593303382-L.jpg",
+    "description": "Junior-reader retelling of season 1 of Jurassic World: Camp Cretaceous.",
+    "publish_year": null
+  },
+  {
+    "title": "Camp Cretaceous, Volume Two: The Deluxe Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Camp-Cretaceous-Two-Novelization-Jurassic/dp/0525643907",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780525643906-L.jpg",
+    "description": "Junior-reader retelling of season 2 of Jurassic World: Camp Cretaceous.",
+    "publish_year": null
+  },
+  {
+    "title": "Camp Cretaceous, Volume Three: The Deluxe Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Camp-Cretaceous-Three-Novelization-Jurassic/dp/0593310276",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780593310274-L.jpg",
+    "description": "Junior-reader retelling of season 3 of Jurassic World: Camp Cretaceous.",
+    "publish_year": null
+  },
+  {
+    "title": "Camp Cretaceous, Volume Four: The Deluxe Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Camp-Cretaceous-Four-Novelization-Jurassic/dp/0593430700",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780593430705-L.jpg",
+    "description": "Junior-reader retelling of season 4/5 of Jurassic World: Camp Cretaceous.",
+    "publish_year": null
+  },
+  {
+    "title": "Chaos Theory, Volume One: The Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Chaos-Theory-One-Novelization-Jurassic/dp/059348309X",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780593483091-L.jpg",
+    "description": "Junior-reader retelling of season 1 of Jurassic World: Chaos Theory.",
+    "publish_year": 2024
+  },
+  {
+    "title": "Chaos Theory, Volume Two: The Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Chaos-Theory-Two-Novelization-Jurassic/dp/0593901401",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9780593901403-L.jpg",
+    "description": "Junior-reader retelling of season 2 of Jurassic World: Chaos Theory.",
+    "publish_year": 2025
+  },
+  {
+    "title": "Chaos Theory, Volume Three: The Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/Chaos-Theory-Three-Novelization-Jurassic/dp/B0DTPCHVD7",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9798217032303-L.jpg",
+    "description": "Junior-reader retelling of season 3 of Jurassic World: Chaos Theory.",
+    "publish_year": null
+  },
+  {
+    "title": "Chaos Theory, Volume Four: The Junior Novelization",
+    "author": "Steve Behling",
+    "category": "junior_novelization",
+    "source_url": "https://www.amazon.com/dp/B0FLP4BSL7",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9798217121182-L.jpg",
+    "description": "Junior-reader retelling of the climactic fourth and final season of Jurassic World: Chaos Theory.",
+    "publish_year": 2026
+  },
+  {
+    "title": "Jurassic Park: The Official Script Book",
+    "author": "Michael Crichton, David Koepp, James Mottram",
+    "category": "guide",
+    "source_url": "https://www.amazon.com/dp/B0C4JPNXKS",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9798886633313-L.jpg",
+    "description": "The official annotated script book for the original 1993 film.",
+    "publish_year": 2023
+  },
+  {
+    "title": "Jurassic Park: The Ultimate Visual History",
+    "author": "James Mottram",
+    "category": "art_book",
+    "source_url": "https://www.amazon.com/Jurassic-Park-Ultimate-Visual-History/dp/168383545X",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9781683835455-L.jpg",
+    "description": "A behind-the-scenes visual history of the original Jurassic Park trilogy, with rare imagery and interviews with the filmmakers and cast.",
+    "publish_year": 2018
+  },
+  {
+    "title": "Jurassic World: The Ultimate Visual History",
+    "author": "James Mottram",
+    "category": "art_book",
+    "source_url": "https://www.amazon.com/Jurassic-World-Ultimate-Visual-History/dp/1647223644",
+    "image_url": "https://covers.openlibrary.org/b/isbn/9781647223649-L.jpg",
+    "description": "A companion visual history covering the making of Jurassic World, Fallen Kingdom, and Dominion.",
+    "publish_year": 2022
+  }
+]

@@ -1,0 +1,13 @@
+[Unit]
+Description=Run the Jurassic AI Dashboard animal sync periodically (script self-gates on America/New_York ~3AM)
+
+[Timer]
+# Fires every 15 minutes in system-local time; the script itself checks
+# whether it is currently ~3:00 AM America/New_York (DST-aware) before doing
+# any real work, so the timer's own frequency/timezone doesn't need to match
+# New York time exactly.
+OnCalendar=*:0/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

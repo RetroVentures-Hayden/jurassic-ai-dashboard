@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jurassic AI Dashboard</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self';" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="tab-nav" id="tab-nav">
+      <button class="tab-btn active" data-tab="library">🎬 Library</button>
+      <button class="tab-btn" data-tab="checklist">✅ Checklist</button>
+      <button class="tab-btn" data-tab="maps">🗺️ Maps</button>
+      <button class="tab-btn" data-tab="books">📚 Books</button>
+      <button class="tab-btn" data-tab="animals">🦕 Animals</button>
+      <button class="tab-btn" data-tab="news">📰 News</button>
+      <button class="tab-btn" data-tab="chat">💬 Chat</button>
+      <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+    </nav>
+    <header class="app-header">
+      <h1>Jurassic AI Dashboard</h1>
+    </header>
+    <main id="tab-content" class="tab-content"></main>
+  </div>
+
+  <dialog id="image-modal" class="image-modal">
+    <div class="image-modal-inner">
+      <button class="image-modal-close" id="image-modal-close" aria-label="Close">✕</button>
+      <h2 id="image-modal-title"></h2>
+      <div class="image-modal-image-wrap">
+        <img id="image-modal-img" alt="" />
+        <div id="image-modal-placeholder" class="image-modal-placeholder" hidden>No preview image available yet</div>
+      </div>
+      <p id="image-modal-description"></p>
+      <div class="image-modal-actions">
+        <button id="image-modal-visit" class="btn btn-primary">Visit Site ↗</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

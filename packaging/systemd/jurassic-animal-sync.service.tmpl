@@ -1,0 +1,7 @@
+[Unit]
+Description=Jurassic AI Dashboard - daily animal encyclopedia sync
+
+[Service]
+Type=oneshot
+Environment=ELECTRON_RUN_AS_NODE=1
+ExecStart={{NODE_BIN}} {{SCRIPT_PATH}}

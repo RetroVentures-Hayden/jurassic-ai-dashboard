@@ -1,0 +1,92 @@
+appId: com.hayhayman219.jurassicaidashboard
+productName: Jurassic AI Dashboard
+directories:
+  output: dist
+files:
+  - src/**/*
+  - "!src/renderer/js/**/*.test.js"
+  - scripts/**/*
+  - package.json
+  - node_modules/**/*
+extraResources:
+  - from: packaging/systemd
+    to: systemd
+# The standalone sync script is invoked directly by systemd as a plain file
+# path outside the Electron process, so it (and native .node addons) must be
+# real files on disk rather than packed inside app.asar.
+asarUnpack:
+  - "**/*.node"
+  - "scripts/**/*"
+
+# --- Linux --- builds fine on this machine; .deb registers a .desktop entry
+# so the app shows up in the GNOME/COSMIC Applications menu on install.
+linux:
+  target:
+    - deb
+    - AppImage
+    - rpm
+  category: Utility
+  # A directory of pre-rendered sizes (16..1024), not a single file — Linux
+  # icon themes look up a specific pixel size and a lone 1024x1024 PNG
+  # doesn't get rescaled/found by every launcher, which is why the app
+  # showed no icon after installing with only packaging/linux/icon.png set.
+  icon: packaging/linux/icons
+  executableName: jurassic-ai-dashboard
+  syncDesktopName: true
+deb:
+  depends:
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+
+# --- Windows --- builds fine on this machine via Wine (installed). NSIS
+# installer adds a Start Menu shortcut/entry and an uninstaller; the systemd
+# animal-sync timer is Linux-only, so on Windows only the in-app "Sync Now"
+# button drives the animal database (no OS-level scheduled task is set up
+# automatically — that would need a separate Task Scheduler integration).
+win:
+  target:
+    - nsis
+    - portable
+  # A real pre-built multi-resolution .ico (16..256px embedded in one file),
+  # generated directly rather than relying on electron-builder to convert a
+  # single PNG — the Linux icon bug taught us not to assume that conversion
+  # step does the right thing without checking.
+  icon: packaging/windows/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+# --- macOS --- CANNOT be built from this Linux machine: electron-builder
+# requires actually running on macOS (or a macOS CI runner) to produce a
+# valid, signed .app/.dmg — there is no Linux cross-compile path for this,
+# unlike Windows via Wine. This config is correct and ready to go, but
+# `npm run build:mac` must be run on a Mac (or e.g. GitHub Actions'
+# macos-latest runner) to actually produce output.
+# Builds both chip architectures so both older Intel Macs and Apple Silicon
+# (M1+) are covered. minimumSystemVersion is set to 13.5 (Ventura), not
+# lower, because the native better-sqlite3 module this app depends on is
+# only built against macOS 13.5+ starting with the Node version current
+# Electron releases bundle — declaring a lower minimum would let the app
+# install on older macOS where it just wouldn't run.
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  # The standard Apple .iconset folder (icon_16x16.png ... icon_512x512@2x.png)
+  # rather than a single PNG, so electron-builder (or `iconutil -c icns` run
+  # by hand) has every required size to build a correct multi-resolution
+  # .icns, same reasoning as the Windows .ico above.
+  icon: packaging/mac/icon.iconset
+  category: public.app-category.entertainment
+  minimumSystemVersion: "13.5"

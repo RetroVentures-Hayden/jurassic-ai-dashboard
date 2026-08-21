@@ -1,0 +1,40 @@
+{
+  "name": "jurassic-ai-dashboard",
+  "productName": "Jurassic AI Dashboard",
+  "version": "1.0.0",
+  "description": "Local dashboard for Jurassic Park/World movies, series, maps, books, a real dinosaur/animal encyclopedia, local AI chat, and franchise news.",
+  "main": "src/main/main.js",
+  "desktopName": "jurassic-ai-dashboard.desktop",
+  "homepage": "https://github.com/hayhayman219-boop/jurassic-ai-dashboard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hayhayman219-boop/jurassic-ai-dashboard.git"
+  },
+  "author": {
+    "name": "Hayden Ross",
+    "email": "hayhayman219-boop@users.noreply.github.com"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run build:linux && npm run build:win",
+    "build:linux": "electron-builder --linux deb AppImage",
+    "build:linux:rpm": "electron-builder --linux rpm",
+    "build:win": "electron-builder --win nsis portable",
+    "build:mac": "electron-builder --mac dmg zip",
+    "postinstall": "electron-builder install-app-deps",
+    "sync:animals": "node scripts/sync-animal-db.mjs",
+    "sync:animals:force": "node scripts/sync-animal-db.mjs --force",
+    "bulk:animals": "node scripts/bulk-import-animals.mjs",
+    "build:seed": "node scripts/build-animal-seed.mjs"
+  },
+  "dependencies": {
+    "duckdb": "^1.4.4",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3"
+  }
+}
