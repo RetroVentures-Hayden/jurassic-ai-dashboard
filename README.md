@@ -7,7 +7,6 @@ Runs entirely on your own machine — no accounts, no cloud services, no telemet
 
 ## Features
 
-- **Library** — scans a local folder of film files and plays them in your default video player
 - **Checklist** — track which films, series (per season) and books you own a **physical copy** of,
   each linking to its Amazon listing
 - **Wiki/Maps** — a directory of the major Jurassic-franchise wiki sites (kept current from a
@@ -36,15 +35,13 @@ npm run web        # web host — same UI over HTTP, for phones/tablets/other PC
 ```
 
 `npm run web` serves the dashboard at `http://127.0.0.1:4178` (set `WEB_TOKEN` to
-require a shared secret). It streams local video with seek support and takes over
-the nightly animal sync. Expose it to your other devices with a Cloudflare Tunnel
-— see [docs/WEB_HOSTING.md](docs/WEB_HOSTING.md). Run the web host **or** the
-desktop app, not both (DuckDB allows a single writer).
+require a shared secret) and takes over the nightly animal sync. Expose it to your
+other devices with a Cloudflare Tunnel — see
+[docs/WEB_HOSTING.md](docs/WEB_HOSTING.md). Run the web host **or** the desktop
+app, not both (DuckDB allows a single writer).
 
 On first launch the app creates its DuckDB database at
 `~/.config/jurassic-ai-dashboard/jurassic.duckdb` and seeds a curated starter set of animals.
-
-To point the Library tab at your own media folder, use **Settings → Choose Folder**.
 
 ## Building an installable package
 

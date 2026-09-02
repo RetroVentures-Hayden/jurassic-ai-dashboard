@@ -5,11 +5,6 @@ function invoke(channel) {
 }
 
 contextBridge.exposeInMainWorld('api', {
-  library: {
-    list: invoke('library:list'),
-    play: invoke('library:play'),
-    rescan: invoke('library:rescan'),
-  },
   checklist: {
     list: invoke('checklist:list'),
     toggleOwned: invoke('checklist:toggleOwned'),
@@ -45,7 +40,5 @@ contextBridge.exposeInMainWorld('api', {
   },
   settings: {
     get: invoke('settings:get'),
-    setLibraryPath: invoke('settings:setLibraryPath'),
-    pickLibraryFolder: invoke('settings:pickLibraryFolder'),
   },
 });

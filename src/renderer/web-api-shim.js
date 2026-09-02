@@ -40,46 +40,7 @@
     return r;
   };
 
-  function playVideo(id) {
-    const src = '/media/' + Number(id);
-    const overlay = document.createElement('div');
-    overlay.className = 'web-video-overlay';
-    overlay.innerHTML =
-      '<div class="web-video-inner">' +
-      '<button class="web-video-close" aria-label="Close">✕</button>' +
-      '<video controls autoplay playsinline preload="metadata" src="' + src + '"></video>' +
-      '<p class="web-video-note">Playback needs a format your browser can decode — the H.264 .mp4 rips play everywhere; ' +
-      'MKV / HEVC (Dominion, Rebirth) won’t play in Safari. <a href="' + src + '" target="_blank" rel="noopener">Open directly ↗</a></p>' +
-      '</div>';
-    const close = () => {
-      const v = overlay.querySelector('video');
-      if (v) v.pause();
-      overlay.remove();
-      document.removeEventListener('keydown', onKey);
-    };
-    function onKey(e) {
-      if (e.key === 'Escape') close();
-    }
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay || e.target.classList.contains('web-video-close')) close();
-    });
-    document.addEventListener('keydown', onKey);
-    document.body.appendChild(overlay);
-    return Promise.resolve(true);
-  }
-
-  async function pickLibraryFolder() {
-    const p = window.prompt('Full path to your movies folder on the server machine:');
-    if (!p) return null;
-    return invoke('settings:setLibraryPath', [p.trim()]);
-  }
-
   window.api = {
-    library: {
-      list: call('library:list'),
-      play: (id) => playVideo(id),
-      rescan: call('library:rescan'),
-    },
     checklist: {
       list: call('checklist:list'),
       toggleOwned: call('checklist:toggleOwned'),
@@ -115,8 +76,6 @@
     },
     settings: {
       get: call('settings:get'),
-      setLibraryPath: call('settings:setLibraryPath'),
-      pickLibraryFolder: pickLibraryFolder,
     },
   };
 })();

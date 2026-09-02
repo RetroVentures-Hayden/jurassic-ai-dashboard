@@ -1,4 +1,3 @@
-import { renderLibrary } from './pages/library.js';
 import { renderChecklist } from './pages/checklist.js';
 import { renderMaps } from './pages/maps.js';
 import { renderBooks } from './pages/books.js';
@@ -8,7 +7,6 @@ import { renderChat } from './pages/chat.js';
 import { renderSettings } from './pages/settings.js';
 
 const pages = {
-  library: renderLibrary,
   checklist: renderChecklist,
   maps: renderMaps,
   books: renderBooks,
@@ -36,4 +34,4 @@ navButtons.forEach((btn) => {
   btn.addEventListener('click', () => showTab(btn.dataset.tab));
 });
 
-showTab('library');
+showTab('checklist');

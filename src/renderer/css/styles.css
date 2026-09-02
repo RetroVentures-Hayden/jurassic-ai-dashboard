@@ -224,51 +224,10 @@ input[type="text"], input[type="search"] {
 }
 
 /* ------------------------------------------------------------------ */
-/* Web build (src/server/): in-browser video overlay + phone layout.  */
-/* The .web-video-* markup is only created by web-api-shim.js; the     */
-/* media query only changes anything on narrow screens, so the        */
-/* Electron window is unaffected.                                     */
+/* Web build (src/server/): narrow-screen layout for phones/tablets.  */
+/* Only takes effect below 760px, so the Electron window is           */
+/* unaffected.                                                        */
 /* ------------------------------------------------------------------ */
-.web-video-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 16px;
-}
-.web-video-inner {
-  position: relative;
-  width: min(1100px, 100%);
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.web-video-inner video {
-  width: 100%;
-  max-height: 78vh;
-  background: #000;
-  border-radius: var(--radius);
-}
-.web-video-note { color: var(--text-muted); font-size: 0.8rem; margin: 0; text-align: center; }
-.web-video-note a { color: var(--accent-strong); }
-.web-video-close {
-  position: absolute;
-  top: -14px;
-  right: -6px;
-  background: var(--bg-card);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  width: 36px;
-  height: 36px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
 @media (max-width: 760px) {
   .app-shell {
     grid-template-columns: 1fr;

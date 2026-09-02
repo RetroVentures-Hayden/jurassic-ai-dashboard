@@ -2,8 +2,7 @@
 // Web-app host for the Jurassic AI Dashboard. Serves the same renderer the
 // Electron app uses (src/renderer/), but instead of Electron IPC it exposes a
 // single POST /api/invoke that runs the reused IPC handlers (see ipcBridge.js),
-// plus routes for streaming local video (/media/:id, with HTTP Range support so
-// the phone can seek) and serving cached preview images (/local-file).
+// plus /local-file for the cached map/book preview images.
 //
 // Run:  npm run web        (defaults to 127.0.0.1:4178)
 // Env:  WEB_PORT  WEB_HOST  WEB_TOKEN
@@ -16,7 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { openDatabase } = require('../main/db');
-const { IMAGES_DIR, DEFAULT_LIBRARY_PATH } = require('../main/constants');
+const { IMAGES_DIR } = require('../main/constants');
 const { buildBridge } = require('./ipcBridge');
 const { startScheduler } = require('./scheduler');
 
@@ -41,15 +40,6 @@ const MIME = {
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
 };
-const VIDEO_MIME = {
-  '.mp4': 'video/mp4',
-  '.m4v': 'video/mp4',
-  '.webm': 'video/webm',
-  '.mkv': 'video/x-matroska',
-  '.mov': 'video/quicktime',
-  '.avi': 'video/x-msvideo',
-};
-
 function send(res, status, body, headers = {}) {
   if (res.headersSent) return;
   res.writeHead(status, headers);
@@ -137,56 +127,6 @@ function serveLocalFile(req, res, url) {
   });
 }
 
-async function serveMedia(req, res, idRaw, db) {
-  const id = Number(idRaw);
-  if (!Number.isInteger(id)) return send(res, 400, 'bad id');
-
-  const row = await db.get('SELECT file_path FROM media_items WHERE id = ?', [id]);
-  if (!row) return send(res, 404, 'Not found');
-
-  const libRow = await db.get("SELECT value FROM settings WHERE key = 'library_path'");
-  const libraryPath = path.resolve(libRow?.value || DEFAULT_LIBRARY_PATH);
-  const resolved = path.resolve(row.file_path);
-  if (resolved !== libraryPath && !resolved.startsWith(libraryPath + path.sep)) {
-    return send(res, 403, 'Outside the configured library folder');
-  }
-
-  let st;
-  try {
-    st = fs.statSync(resolved);
-  } catch {
-    return send(res, 404, 'File missing on disk');
-  }
-
-  const type = VIDEO_MIME[path.extname(resolved).toLowerCase()] || 'application/octet-stream';
-  const range = req.headers.range;
-
-  if (range) {
-    const m = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
-    let start = m && m[1] ? parseInt(m[1], 10) : 0;
-    let end = m && m[2] ? parseInt(m[2], 10) : st.size - 1;
-    if (!m || Number.isNaN(start) || Number.isNaN(end) || start > end || end >= st.size) {
-      return send(res, 416, '', { 'Content-Range': `bytes */${st.size}` });
-    }
-    res.writeHead(206, {
-      'Content-Type': type,
-      'Content-Range': `bytes ${start}-${end}/${st.size}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': end - start + 1,
-      'Cache-Control': 'no-store',
-    });
-    fs.createReadStream(resolved, { start, end }).pipe(res);
-  } else {
-    res.writeHead(200, {
-      'Content-Type': type,
-      'Content-Length': st.size,
-      'Accept-Ranges': 'bytes',
-      'Cache-Control': 'no-store',
-    });
-    fs.createReadStream(resolved).pipe(res);
-  }
-}
-
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -253,9 +193,6 @@ async function main() {
         }
       }
 
-      if (req.method === 'GET' && pathname.startsWith('/media/')) {
-        return serveMedia(req, res, pathname.slice('/media/'.length), db);
-      }
       if (req.method === 'GET' && pathname === '/local-file') {
         return serveLocalFile(req, res, url);
       }

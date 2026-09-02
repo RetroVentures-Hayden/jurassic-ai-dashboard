@@ -1,10 +1,9 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
 const { CONFIG_DIR, IMAGES_DIR, STATE_DIR } = require('./constants');
 const { openDatabase } = require('./db');
-const registerLibraryIpc = require('./ipc/library.ipc');
 const registerChecklistIpc = require('./ipc/checklist.ipc');
 const registerMapsIpc = require('./ipc/maps.ipc');
 const registerBooksIpc = require('./ipc/books.ipc');
@@ -12,7 +11,6 @@ const registerAnimalsIpc = require('./ipc/animals.ipc');
 const registerNewsIpc = require('./ipc/news.ipc');
 const registerChatIpc = require('./ipc/chat.ipc');
 const registerSettingsIpc = require('./ipc/settings.ipc');
-const { rescan } = require('./ipc/library.ipc');
 const { installTimer } = require('./services/systemdInstaller');
 
 // The app name controls Electron's userData path (~/.config/<name>) — it must
@@ -52,19 +50,13 @@ app.whenReady().then(async () => {
   ensureDirs();
   const db = await openDatabase();
 
-  registerLibraryIpc(ipcMain, db);
   registerChecklistIpc(ipcMain, db, { shell });
   registerMapsIpc(ipcMain, db, { shell });
   registerBooksIpc(ipcMain, db, { shell });
   registerAnimalsIpc(ipcMain, db, { shell });
   registerNewsIpc(ipcMain, db, { shell });
   registerChatIpc(ipcMain, db);
-  registerSettingsIpc(ipcMain, db, { dialog });
-
-  // Populate media_items on first ready (previously done inside
-  // library.ipc.js itself, moved here now that rescan is async and needs
-  // to be awaited rather than fired-and-forgotten during registration).
-  rescan(db).catch((err) => console.error('[library] initial rescan failed:', err.message));
+  registerSettingsIpc(ipcMain, db);
 
   createWindow();
 

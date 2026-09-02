@@ -39,7 +39,6 @@ function renderItem(item) {
   return `
     <div class="card">
       <h3>${escapeHtml(item.title)}</h3>
-      <div class="meta">${item.media_file_path ? 'In local library' : 'Not in local library'}</div>
       <div class="btn-row">
         <button class="btn" data-visit="${item.id}">🛒 View on Amazon ↗</button>
       </div>
