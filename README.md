@@ -31,8 +31,15 @@ Runs entirely on your own machine — no accounts, no cloud services, no telemet
 
 ```bash
 npm install
-npm start
+npm start          # desktop (Electron) app
+npm run web        # web host — same UI over HTTP, for phones/tablets/other PCs
 ```
+
+`npm run web` serves the dashboard at `http://127.0.0.1:4178` (set `WEB_TOKEN` to
+require a shared secret). It streams local video with seek support and takes over
+the nightly animal sync. Expose it to your other devices with a Cloudflare Tunnel
+— see [docs/WEB_HOSTING.md](docs/WEB_HOSTING.md). Run the web host **or** the
+desktop app, not both (DuckDB allows a single writer).
 
 On first launch the app creates its DuckDB database at
 `~/.config/jurassic-ai-dashboard/jurassic.duckdb` and seeds a curated starter set of animals.
@@ -131,7 +138,8 @@ Known limitations, stated plainly:
 
 ```
 src/main/          Electron main process — database, IPC handlers, services
-src/renderer/      UI (plain HTML/CSS/JS, no framework)
+src/renderer/      UI (plain HTML/CSS/JS, no framework) — shared by both frontends
+src/server/        Web host — reuses the IPC handlers over HTTP (npm run web)
 scripts/           Data import, migration and enrichment scripts
 packaging/         Icons and systemd unit templates
 docs/              Research notes on verified data sources

@@ -39,7 +39,12 @@ export function openModal({ title, description, onVisit, loadImage }) {
           imgEl.style.display = 'none';
           return;
         }
-        imgEl.src = `file://${localPath}`;
+        // Electron: getImage gives an absolute fs path -> file://. Web build:
+        // the shim already returns a ready "/local-file?p=..." (or an http) URL.
+        imgEl.src =
+          localPath.startsWith('/local-file') || /^https?:/i.test(localPath)
+            ? localPath
+            : `file://${localPath}`;
         imgEl.style.display = 'block';
         placeholderEl.hidden = true;
       })

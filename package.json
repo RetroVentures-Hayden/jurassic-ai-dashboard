@@ -18,6 +18,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "web": "node src/server/server.js",
     "build": "npm run build:linux && npm run build:win",
     "build:linux": "electron-builder --linux deb AppImage",
     "build:linux:rpm": "electron-builder --linux rpm",
