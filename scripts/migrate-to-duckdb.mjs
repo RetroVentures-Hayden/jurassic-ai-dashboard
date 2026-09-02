@@ -86,7 +86,18 @@ async function main() {
       console.log(`  ${table}: nothing to copy`);
       continue;
     }
-    await run(conn, `INSERT INTO ${table} SELECT * FROM src.${table}`);
+    // `news_items` gained a `topic` column (migration 004) that the legacy
+    // SQLite database predates, so its copy must name the shared columns
+    // explicitly rather than rely on `SELECT *` column-count matching.
+    if (table === 'news_items') {
+      await run(
+        conn,
+        `INSERT INTO news_items (id, title, link, published_at, source, summary, fetched_at)
+         SELECT id, title, link, published_at, source, summary, fetched_at FROM src.news_items`
+      );
+    } else {
+      await run(conn, `INSERT INTO ${table} SELECT * FROM src.${table}`);
+    }
     const maxRow = (await all(conn, `SELECT max(id) AS m FROM ${table}`))[0];
     const maxId = Number(maxRow.m);
     // This DuckDB version supports neither ALTER SEQUENCE ... RESTART WITH

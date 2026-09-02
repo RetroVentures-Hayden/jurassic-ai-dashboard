@@ -127,6 +127,49 @@ async function syncChecklistFromSeed(db) {
   if (toUpdate.length) console.log(`[db] refreshed source_url for ${toUpdate.length} existing checklist entries`);
 }
 
+// Same rationale as syncBooksFromSeed/syncChecklistFromSeed: maps.seed.json is
+// expected to be kept current over time (new franchise wiki sites, corrected or
+// relocated URLs), so this runs on every startup: it adds any title not already
+// present AND refreshes the non-user-facing fields (category, source_url,
+// image_url, description, verified_at) on rows that are. local_image_path is
+// cleared on refresh so a changed image_url is re-fetched instead of showing a
+// stale cached preview. Every row is then renumbered to the seed's order so the
+// tab's sections render predictably.
+async function syncMapsFromSeed(db) {
+  const mapsPath = path.join(__dirname, 'seed', 'maps.seed.json');
+  if (!fs.existsSync(mapsPath)) return;
+
+  const seedMaps = JSON.parse(fs.readFileSync(mapsPath, 'utf8'));
+  const existingTitles = new Set((await db.all('SELECT title FROM maps')).map((r) => r.title));
+  const toInsert = seedMaps.filter((item) => !existingTitles.has(item.title));
+  const toUpdate = seedMaps.filter((item) => existingTitles.has(item.title));
+
+  await db.transaction(async () => {
+    for (const item of toInsert) {
+      await db.run(
+        `INSERT INTO maps (title, category, source_url, image_url, local_image_path, description, verified_at, sort_order)
+         VALUES (?, ?, ?, ?, NULL, ?, ?, 0)`,
+        [item.title, item.category, item.source_url, item.image_url ?? null, item.description ?? null, item.verified_at ?? null]
+      );
+    }
+    for (const item of toUpdate) {
+      await db.run(
+        `UPDATE maps SET category = ?, source_url = ?, image_url = ?, local_image_path = NULL,
+           description = ?, verified_at = ? WHERE title = ?`,
+        [item.category, item.source_url, item.image_url ?? null, item.description ?? null, item.verified_at ?? null, item.title]
+      );
+    }
+    let i = 0;
+    for (const item of seedMaps) {
+      await db.run('UPDATE maps SET sort_order = ? WHERE title = ?', [i, item.title]);
+      i += 1;
+    }
+  });
+
+  if (toInsert.length) console.log(`[db] synced ${toInsert.length} new map entries from seed`);
+  if (toUpdate.length) console.log(`[db] refreshed ${toUpdate.length} existing map entries from seed`);
+}
+
 // Same rationale as syncBooksFromSeed/syncChecklistFromSeed: the curated
 // animal set is expected to keep growing, so this adds any common_name not
 // already present rather than only seeding once. Matches by common_name
@@ -175,27 +218,7 @@ async function syncAnimalsFromSeed(db) {
 
 async function seedIfEmpty(db) {
   await syncChecklistFromSeed(db);
-
-  const mapsCountRow = await db.get('SELECT COUNT(*) AS n FROM maps');
-  if (Number(mapsCountRow.n) === 0) {
-    const mapsPath = path.join(__dirname, 'seed', 'maps.seed.json');
-    if (fs.existsSync(mapsPath)) {
-      const seedMaps = JSON.parse(fs.readFileSync(mapsPath, 'utf8'));
-      await db.transaction(async () => {
-        let i = 0;
-        for (const item of seedMaps) {
-          await db.run(
-            `INSERT INTO maps (title, category, source_url, image_url, local_image_path, description, verified_at, sort_order)
-             VALUES (?, ?, ?, ?, NULL, ?, ?, ?)`,
-            [item.title, item.category, item.source_url, item.image_url ?? null, item.description ?? null, item.verified_at ?? null, i]
-          );
-          i += 1;
-        }
-      });
-      console.log(`[db] seeded ${seedMaps.length} map entries`);
-    }
-  }
-
+  await syncMapsFromSeed(db);
   await syncBooksFromSeed(db);
   await syncAnimalsFromSeed(db);
 }

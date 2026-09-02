@@ -1,8 +1,22 @@
 const path = require('node:path');
-const { execFile } = require('node:child_process');
 const { LAST_SYNC_MARKER } = require('../constants');
 const fs = require('node:fs');
 const { resolveAnimalWiki } = require('../services/wikiResolver');
+const { runAnimalSync } = require('../services/animalSync');
+
+// The America/New_York calendar date, matching how scripts/sync-animal-db.mjs
+// stamps its last-sync marker and sync_log rows so the two paths stay
+// consistent about "which day did we last sync".
+function newYorkDate(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const get = (type) => parts.find((p) => p.type === type)?.value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
 
 module.exports = function registerAnimalsIpc(ipcMain, db, { shell }) {
   // The animals table holds ~1.8M rows after the GBIF backbone import, so
@@ -136,13 +150,45 @@ module.exports = function registerAnimalsIpc(ipcMain, db, { shell }) {
     return shell.openExternal(data.wikiUrl);
   });
 
-  ipcMain.handle('animals:syncNow', () => {
-    const scriptPath = path.join(__dirname, '..', '..', '..', 'scripts', 'sync-animal-db.mjs');
-    return new Promise((resolve, reject) => {
-      execFile(process.execPath, [scriptPath, '--force'], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }, (err, stdout, stderr) => {
-        if (err) reject(new Error(stderr || err.message));
-        else resolve(stdout);
-      });
-    });
+  // Runs the sync IN-PROCESS against the app's own DB connection. It used to
+  // spawn `scripts/sync-animal-db.mjs` as a separate node process, but that
+  // process could never open jurassic.duckdb — DuckDB allows a single writer
+  // and the app already holds it — so the button always failed with a
+  // "Connection was never established" error while the app was open. The
+  // nightly systemd timer still uses the standalone script (app closed).
+  ipcMain.handle('animals:syncNow', async () => {
+    const now = new Date();
+    const nyDate = newYorkDate(now);
+
+    let result = { inserted: 0, updated: 0, summaryLines: [] };
+    let status = 'ok';
+    let errorMessage = null;
+
+    try {
+      result = await runAnimalSync({ db, now, log: (m) => console.log(`[animals:sync] ${m}`) });
+    } catch (err) {
+      status = 'error';
+      errorMessage = err.message;
+      console.error('[animals:sync] failed:', err.message);
+    }
+
+    await db.run(
+      `INSERT INTO sync_log (run_at, ny_date, trigger_type, inserted_count, updated_count, status, error_message)
+       VALUES (?, ?, 'manual', ?, ?, ?, ?)`,
+      [new Date().toISOString(), nyDate, result.inserted, result.updated, status, errorMessage]
+    );
+
+    if (status === 'error') {
+      throw new Error(errorMessage || 'Sync failed');
+    }
+
+    try {
+      fs.mkdirSync(path.dirname(LAST_SYNC_MARKER), { recursive: true });
+      fs.writeFileSync(LAST_SYNC_MARKER, nyDate);
+    } catch (err) {
+      console.error('[animals:sync] could not write last-sync marker:', err.message);
+    }
+
+    return [`+${result.inserted} added, ${result.updated} updated.`, ...result.summaryLines].join('\n');
   });
 };

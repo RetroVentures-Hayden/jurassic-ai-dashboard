@@ -3,7 +3,7 @@
 // returns the real canonical URL (handling disambiguation, redirects, etc.)
 // for whichever title actually matches, so the link is guaranteed to point
 // at that exact animal's own article, not a guessed or generic page.
-const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/hayhayman219-boop/jurassic-ai-dashboard)';
+const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/RetroVentures-Hayden/jurassic-ai-dashboard)';
 
 async function fetchSummary(title) {
   const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {

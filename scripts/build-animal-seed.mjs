@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = path.join(__dirname, '..', 'src', 'main', 'db', 'seed', 'animals.seed.json');
-const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/hayhayman219-boop/jurassic-ai-dashboard)';
+const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/RetroVentures-Hayden/jurassic-ai-dashboard)';
 const TARGET_COUNT = parseInt(process.env.SEED_COUNT || '60', 10);
 
 async function fetchJson(url) {

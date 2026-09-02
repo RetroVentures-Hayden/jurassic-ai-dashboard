@@ -38,5 +38,85 @@
     "image_url": null,
     "description": "A fan-made recreation/concept map by artist JoshuaDunlop imagining a Jurassic World park map, hosted on DeviantArt.",
     "verified_at": "2026-08-20"
+  },
+  {
+    "title": "Jurassic Park Wiki (ParkPedia)",
+    "category": "wiki",
+    "source_url": "https://jurassicpark.fandom.com",
+    "image_url": null,
+    "description": "The largest community-run Jurassic encyclopedia (\"ParkPedia\"), hosted on Fandom. Covers every film, TV series, novel, comic, video game and toy line, plus detailed pages on characters, locations and every on-screen creature.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Jurassic-Pedia",
+    "category": "wiki",
+    "source_url": "https://www.jurassic-pedia.com",
+    "image_url": null,
+    "description": "A long-running unofficial, canon-focused encyclopedia of the franchise, written in an in-universe style and carefully sourced to the films, novels and supporting material.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Jurassic Outpost",
+    "category": "wiki",
+    "source_url": "https://jurassicoutpost.com",
+    "image_url": null,
+    "description": "The main Jurassic Park / Jurassic World fan-news site (a 2016 rebrand of JurassicWorld.org), covering announcements, set news, interviews and merchandise, and home of the InGeneral podcast.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "The Jurassic Wiki (Jurassic Outpost Encyclopedia)",
+    "category": "wiki",
+    "source_url": "https://jurassicwiki.com",
+    "image_url": null,
+    "description": "The encyclopedia companion to Jurassic Outpost, cataloguing the franchise's films, creatures, characters and production history.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Jurassic Park Institute Wiki",
+    "category": "wiki",
+    "source_url": "https://jurassic-park-institute.fandom.com",
+    "image_url": null,
+    "description": "A dinosaur-focused Fandom wiki named after Universal's original 2001-2006 Jurassic Park Institute website, concentrating on the prehistoric animals of the franchise and their real-world counterparts.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Jurassic World Evolution Wiki",
+    "category": "wiki",
+    "source_url": "https://jurassicworld-evolution.fandom.com",
+    "image_url": null,
+    "description": "Fandom wiki for Frontier Developments' Jurassic World Evolution park-management game series, with data on every buildable species, building and mechanic.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Jurassic World Alive Wiki",
+    "category": "wiki",
+    "source_url": "https://jurassic-world-alive.fandom.com",
+    "image_url": null,
+    "description": "Fandom wiki for Ludia's location-based AR mobile game Jurassic World Alive, covering its creatures, hybrids, stats and live events.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Jurassic World: The Game Wiki",
+    "category": "wiki",
+    "source_url": "https://jurassic-world-the-game.fandom.com",
+    "image_url": null,
+    "description": "Fandom wiki for Ludia's park-builder mobile game Jurassic World: The Game, documenting its roster of dinosaurs, hybrids and tournaments.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Wikipedia: Jurassic Park (franchise)",
+    "category": "wiki",
+    "source_url": "https://en.wikipedia.org/wiki/Jurassic_Park",
+    "image_url": null,
+    "description": "Wikipedia's real-world overview of the whole franchise - films, novels, box office, cast and production history - with citations to reliable sources.",
+    "verified_at": "2026-09-02"
+  },
+  {
+    "title": "Wikipedia: Dinosaurs in Jurassic Park",
+    "category": "wiki",
+    "source_url": "https://en.wikipedia.org/wiki/Dinosaurs_in_Jurassic_Park",
+    "image_url": null,
+    "description": "Wikipedia's dedicated article listing and describing every dinosaur and prehistoric creature to appear across the Jurassic Park films, with notes on their scientific accuracy.",
+    "verified_at": "2026-09-02"
   }
 ]

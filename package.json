@@ -5,14 +5,14 @@
   "description": "Local dashboard for Jurassic Park/World movies, series, maps, books, a real dinosaur/animal encyclopedia, local AI chat, and franchise news.",
   "main": "src/main/main.js",
   "desktopName": "jurassic-ai-dashboard.desktop",
-  "homepage": "https://github.com/hayhayman219-boop/jurassic-ai-dashboard",
+  "homepage": "https://github.com/RetroVentures-Hayden/jurassic-ai-dashboard",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hayhayman219-boop/jurassic-ai-dashboard.git"
+    "url": "https://github.com/RetroVentures-Hayden/jurassic-ai-dashboard.git"
   },
   "author": {
     "name": "Hayden Ross",
-    "email": "hayhayman219-boop@users.noreply.github.com"
+    "email": "RetroVentures-Hayden@users.noreply.github.com"
   },
   "license": "UNLICENSED",
   "private": true,

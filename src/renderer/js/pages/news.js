@@ -1,5 +1,13 @@
 import { escapeHtml } from '../util.js';
 
+// Sections are rendered in this order. Headlines with no topic (rows stored
+// before the multi-feed split) fall back to 'franchise'.
+const TOPIC_SECTIONS = [
+  ['franchise', 'Jurassic Franchise'],
+  ['paleo', 'Prehistoric & Fossil Discoveries'],
+  ['wildlife', 'Wildlife & Conservation'],
+];
+
 export async function renderNews(root) {
   root.innerHTML = `
     <div class="btn-row" style="margin-bottom:16px;">
@@ -42,15 +50,29 @@ async function loadAndRenderCached(root) {
     list.innerHTML = `<div class="status-banner">No news fetched yet. Click "Refresh News" (requires an internet connection).</div>`;
     return;
   }
-  list.innerHTML = items
-    .map(
-      (item) => `
-      <div class="news-item">
-        <h3>${escapeHtml(item.title)}</h3>
-        <div class="meta">${escapeHtml(item.source || '')} ${item.published_at ? '· ' + new Date(item.published_at).toLocaleDateString() : ''}</div>
-        <p>${escapeHtml(item.summary || '')}</p>
-        <a class="btn" href="#" data-link="${escapeHtml(item.link)}">Read More ↗</a>
-      </div>`
-    )
-    .join('');
+
+  const byTopic = {};
+  for (const item of items) {
+    const topic = item.topic || 'franchise';
+    (byTopic[topic] = byTopic[topic] || []).push(item);
+  }
+
+  list.innerHTML = TOPIC_SECTIONS.map(([key, label]) => {
+    const rows = byTopic[key] || [];
+    if (!rows.length) return '';
+    return `
+      <h2 class="section-heading">${label}</h2>
+      ${rows.map(renderItem).join('')}
+    `;
+  }).join('');
+}
+
+function renderItem(item) {
+  return `
+    <div class="news-item">
+      <h3>${escapeHtml(item.title)}</h3>
+      <div class="meta">${escapeHtml(item.source || '')} ${item.published_at ? '· ' + new Date(item.published_at).toLocaleDateString() : ''}</div>
+      <p>${escapeHtml(item.summary || '')}</p>
+      <a class="btn" href="#" data-link="${escapeHtml(item.link)}">Read More ↗</a>
+    </div>`;
 }

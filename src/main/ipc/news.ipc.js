@@ -2,7 +2,7 @@ const { fetchAndStoreNews } = require('../services/newsService');
 
 module.exports = function registerNewsIpc(ipcMain, db, { shell }) {
   ipcMain.handle('news:list', () => {
-    return db.all('SELECT * FROM news_items ORDER BY published_at DESC LIMIT 50');
+    return db.all('SELECT * FROM news_items ORDER BY published_at DESC LIMIT 150');
   });
 
   ipcMain.handle('news:refresh', async () => {

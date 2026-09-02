@@ -10,13 +10,15 @@ Runs entirely on your own machine — no accounts, no cloud services, no telemet
 - **Library** — scans a local folder of film files and plays them in your default video player
 - **Checklist** — track which films, series (per season) and books you own a **physical copy** of,
   each linking to its Amazon listing
-- **Maps** — official in-universe park/island maps plus fan-made recreations, shown in pop-up
-  image panels
+- **Wiki/Maps** — a directory of the major Jurassic-franchise wiki sites (kept current from a
+  seed file), plus official in-universe park/island maps and fan-made recreations shown in
+  pop-up image panels
 - **Books** — the Jurassic book universe (Crichton novels, junior novelizations, guides, art books)
 - **Animals** — **1.8 million real species**, extinct and living, imported from the Paleobiology
   Database and the GBIF taxonomic backbone. Searchable and filterable by land/water/air and
   extinct/alive, with Wikipedia descriptions.
-- **News** — franchise headlines from a Google News RSS feed
+- **News** — headlines from Google News RSS, grouped into three topics: the Jurassic franchise,
+  prehistoric & fossil discoveries, and wildlife & conservation
 - **Chat** — a local AI assistant backed by Ollama (`qwen2.5:7b`), grounded against the animal database
 
 ## Requirements
@@ -49,9 +51,14 @@ available.
 
 ## Populating the animal database
 
-The app ships with ~111 hand-curated species. The scripts below grow that to the full dataset.
+The app ships with ~139 hand-curated species (the notable real prehistoric and modern animals
+featured across the films and series). The **Animals → Sync Now** button tops this up on demand
+with new taxa from the Paleobiology Database and GBIF; it runs inside the app process against
+the open database, so it works with the app running. The scripts below grow it to the full
+dataset instead.
 
-**Close the app before running any of these — DuckDB allows a single writer.**
+**Close the app before running any of the command-line scripts — DuckDB allows a single writer,
+and a second process can't open the database while the app holds it.**
 
 ```bash
 # 1. Download the GBIF backbone dump (~488MB)

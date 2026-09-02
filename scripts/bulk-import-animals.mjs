@@ -22,7 +22,7 @@ import duckdb from 'duckdb';
 const APP_SLUG = 'jurassic-ai-dashboard';
 const CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), APP_SLUG);
 const DB_PATH = path.join(CONFIG_DIR, 'jurassic.duckdb');
-const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/hayhayman219-boop/jurassic-ai-dashboard)';
+const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/RetroVentures-Hayden/jurassic-ai-dashboard)';
 
 const countArg = process.argv.find((a) => a.startsWith('--count='));
 const TARGET_COUNT = countArg ? parseInt(countArg.split('=')[1], 10) : 2000;

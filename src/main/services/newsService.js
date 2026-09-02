@@ -7,8 +7,30 @@ const parser = new Parser({ timeout: 15000 });
 // live-verify the feed from the sandboxed environment it was built in (no
 // outbound network there); it must be confirmed on first real run via the
 // News tab's "Refresh" button or `news:refresh` IPC call.
-const NEWS_QUERY =
-  '("Jurassic World" OR "Jurassic Park") (movie OR film OR Universal Studios OR Amblin)';
+//
+// The dashboard covers two subjects — the Jurassic franchise AND a real
+// extinct/living-animal encyclopedia — so the News tab pulls one feed per
+// topic and merges the results (deduped by link via ON CONFLICT). Each stored
+// row is tagged with its `topic` so the tab can group the headlines.
+const NEWS_FEEDS = [
+  {
+    topic: 'franchise',
+    query: '("Jurassic World" OR "Jurassic Park") (movie OR film OR series OR "Universal Studios" OR Amblin)',
+  },
+  {
+    topic: 'paleo',
+    query:
+      '(dinosaur OR fossil OR paleontology OR "prehistoric animal" OR "de-extinction") (discovery OR species OR research OR excavation)',
+  },
+  {
+    topic: 'wildlife',
+    query:
+      '("endangered species" OR "wildlife conservation" OR "extinct in the wild" OR "newly discovered species" OR rewilding) animal',
+  },
+];
+
+// Kept for backwards compatibility with anything importing the single query.
+const NEWS_QUERY = NEWS_FEEDS[0].query;
 
 function feedUrl(query) {
   const params = new URLSearchParams({
@@ -21,39 +43,54 @@ function feedUrl(query) {
 }
 
 async function fetchAndStoreNews(db) {
-  const feed = await parser.parseURL(feedUrl(NEWS_QUERY));
-
   const now = new Date().toISOString();
-  const items = (feed.items || []).filter((i) => i.link);
+  let stored = 0;
 
-  await db.transaction(async () => {
-    for (const item of items) {
-      await db.run(
-        `INSERT INTO news_items (title, link, published_at, source, summary, fetched_at)
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(link) DO UPDATE SET
-           title = excluded.title,
-           published_at = excluded.published_at,
-           summary = excluded.summary,
-           fetched_at = excluded.fetched_at`,
-        [
-          item.title || '(untitled)',
-          item.link,
-          item.isoDate || item.pubDate || null,
-          item.creator || item?.source?.title || null,
-          item.contentSnippet || null,
-          now,
-        ]
-      );
+  for (const { topic, query } of NEWS_FEEDS) {
+    let feed;
+    try {
+      feed = await parser.parseURL(feedUrl(query));
+    } catch (err) {
+      // One topic's feed failing (rate limit, transient network) shouldn't
+      // wipe out the other topics' headlines — log it and carry on.
+      console.error(`[news] feed "${topic}" failed: ${err.message}`);
+      continue;
     }
-    await db.run(
-      `INSERT INTO settings (key, value) VALUES ('last_news_refresh', ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-      [now]
-    );
-  });
 
-  return feed.items?.length || 0;
+    const items = (feed.items || []).filter((i) => i.link);
+    await db.transaction(async () => {
+      for (const item of items) {
+        await db.run(
+          `INSERT INTO news_items (title, link, published_at, source, summary, fetched_at, topic)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(link) DO UPDATE SET
+             title = excluded.title,
+             published_at = excluded.published_at,
+             summary = excluded.summary,
+             fetched_at = excluded.fetched_at,
+             topic = excluded.topic`,
+          [
+            item.title || '(untitled)',
+            item.link,
+            item.isoDate || item.pubDate || null,
+            item.creator || item?.source?.title || null,
+            item.contentSnippet || null,
+            now,
+            topic,
+          ]
+        );
+      }
+    });
+    stored += items.length;
+  }
+
+  await db.run(
+    `INSERT INTO settings (key, value) VALUES ('last_news_refresh', ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    [now]
+  );
+
+  return stored;
 }
 
-module.exports = { fetchAndStoreNews, feedUrl, NEWS_QUERY };
+module.exports = { fetchAndStoreNews, feedUrl, NEWS_QUERY, NEWS_FEEDS };

@@ -21,16 +21,22 @@ import os from 'node:os';
 import fs from 'node:fs';
 import duckdb from 'duckdb';
 
+// The PBDB/GBIF fetch + upsert + cursor logic lives in the main-process module
+// so the in-app "Sync Now" button and this standalone timer script share one
+// implementation. This script only adds the standalone-runner concerns:
+// opening its own connection, NY-time gating, the sync_log row, the last-sync
+// marker, and the final CHECKPOINT/close. (ESM default-imports the CJS module's
+// module.exports object.)
+import animalSyncCore from '../src/main/services/animalSync.js';
+
+const { runAnimalSync } = animalSyncCore;
+
 const APP_SLUG = 'jurassic-ai-dashboard';
 const CONFIG_DIR = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), APP_SLUG);
 const STATE_DIR = path.join(process.env.XDG_STATE_HOME || path.join(os.homedir(), '.local', 'state'), APP_SLUG);
 const DB_PATH = path.join(CONFIG_DIR, 'jurassic.duckdb');
 const LAST_SYNC_MARKER = path.join(STATE_DIR, 'last-sync-date');
 const SYNC_LOG_FILE = path.join(STATE_DIR, 'sync.log');
-
-const USER_AGENT = 'JurassicAiDashboard/1.0 (https://github.com/hayhayman219-boop/jurassic-ai-dashboard)';
-const TARGET_PER_SOURCE_PER_NIGHT = 2000;
-const EXHAUSTED_CHECK_SIZE = 50; // once exhausted, how much to poll for newly-appeared records
 
 const args = process.argv.slice(2);
 const FORCE = args.includes('--force');
@@ -78,18 +84,10 @@ function writeMarkerAtomic(nyDate) {
   fs.renameSync(tmp, LAST_SYNC_MARKER);
 }
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-async function fetchJson(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: AbortSignal.timeout(30000) });
-  if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-  return res.json();
-}
-
 // --- Minimal promisified DuckDB helpers (standalone script, no dependency
-// on src/main/db/duckdbClient.js's CJS module to keep this fully portable) ---
+// on src/main/db/duckdbClient.js's CJS module to keep this fully portable).
+// Wrapped into an { all, get, run } shim below and handed to the shared
+// runAnimalSync core; also used directly here for the sync_log row + CHECKPOINT.
 function dbAll(conn, sql, params = []) {
   return new Promise((resolve, reject) => {
     conn.all(sql, ...params, (err, rows) => (err ? reject(err) : resolve(rows)));
@@ -108,265 +106,6 @@ async function dbExec(conn, sql) {
   return new Promise((resolve, reject) => {
     conn.exec(sql, (err) => (err ? reject(err) : resolve()));
   });
-}
-
-async function getCursor(conn, key) {
-  const row = await dbGet(conn, 'SELECT value FROM settings WHERE key = ?', [key]);
-  return row ? parseInt(row.value, 10) : 0;
-}
-
-async function setCursor(conn, key, value) {
-  await dbRun(
-    conn,
-    `INSERT INTO settings (key, value) VALUES (?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-    [key, String(value)]
-  );
-}
-
-async function isExhausted(conn, key) {
-  return (await getCursor(conn, `${key}__exhausted`)) === 1;
-}
-
-async function setExhausted(conn, key, value) {
-  await setCursor(conn, `${key}__exhausted`, value ? 1 : 0);
-}
-
-// --- Paleobiology Database (extinct taxa) ---
-// Pages through PBDB starting at the stored cursor until it hits
-// TARGET_PER_SOURCE_PER_NIGHT new records or the API runs dry. If the
-// source was already marked exhausted from a previous run, only polls a
-// small page first — enough to notice if PBDB has newly added genera
-// (new discoveries get formally described and entered over time) without
-// re-requesting thousands of records every night for nothing.
-async function fetchPbdb(conn) {
-  const cursorKey = 'pbdb_offset';
-  let offset = await getCursor(conn, cursorKey);
-  const wasExhausted = await isExhausted(conn, cursorKey);
-  const target = wasExhausted ? EXHAUSTED_CHECK_SIZE : TARGET_PER_SOURCE_PER_NIGHT;
-  const pageSize = 500;
-
-  const records = [];
-  let exhausted = false;
-  while (records.length < target) {
-    const remaining = target - records.length;
-    const limit = Math.min(pageSize, remaining);
-    const url =
-      `https://paleobiodb.org/data1.2/taxa/list.json?base_name=Dinosauria&rank=genus` +
-      `&status=valid&limit=${limit}&offset=${offset}`;
-    let data;
-    try {
-      data = await fetchJson(url);
-    } catch (err) {
-      log(`PBDB page at offset ${offset} failed: ${err.message}`);
-      break;
-    }
-    const page = data.records || [];
-    for (const rec of page) {
-      records.push({
-        common_name: rec.nam,
-        scientific_name: rec.nam,
-        status: 'extinct',
-        habitat: 'land',
-        clade: rec.phl || rec.odl || 'Dinosauria',
-        period: rec.tei || rec.tli || null,
-        source: 'pbdb',
-        source_id: String(rec.oid || rec.tid || rec.nam),
-      });
-    }
-    offset += page.length;
-    if (page.length < limit) {
-      exhausted = true; // fewer than asked for -> ran out
-      break;
-    }
-    await sleep(300);
-  }
-
-  return { records, cursorKey, offset, exhausted, wasExhausted };
-}
-
-// --- GBIF (extant taxa) ---
-// A single broad Animalia query (highertaxon_key=44) turned out to return
-// long monotonous runs of one class at a time — an early pull landed 1200+
-// records in a row that were ALL sea squirts. Instead, each day's batch
-// comes from one of several distinct, verified taxonomic groups (keys
-// confirmed live against the GBIF API, not guessed), rotating by day of
-// year so the database diversifies across mammals/birds/reptiles/amphibians/
-// insects/arachnids/mollusks/crustaceans over time. Small groups (e.g. the
-// ~26 living crocodilian species) will exhaust for real within a run or two;
-// huge groups (insects, arachnids, mollusks) effectively won't for a very
-// long time. Each group keeps its own pagination cursor + exhausted flag.
-const GBIF_GROUPS = [
-  { name: 'Mammalia', key: 359 },
-  { name: 'Aves', key: 212 },
-  { name: 'Squamata', key: 11592253 }, // lizards & snakes
-  { name: 'Testudines', key: 11418114 }, // turtles
-  { name: 'Crocodylia', key: 11493978 },
-  { name: 'Amphibia', key: 131 },
-  { name: 'Insecta', key: 216 },
-  { name: 'Arachnida', key: 367 },
-  { name: 'Mollusca', key: 52 }, // phylum: snails, bivalves, cephalopods (mixed land/water)
-  { name: 'Malacostraca', key: 229 }, // crabs, shrimp, lobsters (mostly water)
-];
-
-function dayOfYear(date) {
-  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
-  return Math.floor((date.getTime() - start) / 86400000);
-}
-
-function guessHabitat(gbifRecord, groupName) {
-  const cls = (gbifRecord.class || '').toLowerCase();
-  if (cls === 'aves') return 'air';
-  if (['actinopterygii', 'chondrichthyes', 'elasmobranchii', 'sarcopterygii', 'myxini'].includes(cls)) return 'water';
-  if (cls === 'amphibia') return 'multiple';
-  if (groupName === 'Malacostraca') return 'water';
-  if (groupName === 'Mollusca' && ['bivalvia', 'cephalopoda', 'polyplacophora', 'scaphopoda'].includes(cls)) {
-    return 'water';
-  }
-  return 'land';
-}
-
-async function fetchGbif(conn, now) {
-  const group = GBIF_GROUPS[dayOfYear(now) % GBIF_GROUPS.length];
-  const cursorKey = `gbif_offset_${group.key}`;
-  let offset = await getCursor(conn, cursorKey);
-  const wasExhausted = await isExhausted(conn, cursorKey);
-  const target = wasExhausted ? EXHAUSTED_CHECK_SIZE : TARGET_PER_SOURCE_PER_NIGHT;
-  const pageSize = 300;
-
-  const records = [];
-  let exhausted = false;
-  while (records.length < target) {
-    const remaining = target - records.length;
-    const limit = Math.min(pageSize, remaining);
-    const url =
-      `https://api.gbif.org/v1/species/search?rank=SPECIES&highertaxon_key=${group.key}` +
-      `&status=ACCEPTED&limit=${limit}&offset=${offset}`;
-    let data;
-    try {
-      data = await fetchJson(url);
-    } catch (err) {
-      log(`GBIF ${group.name} page at offset ${offset} failed: ${err.message}`);
-      break;
-    }
-    const page = data.results || [];
-    for (const rec of page) {
-      if (!rec.canonicalName) continue;
-      records.push({
-        common_name: rec.vernacularName || rec.canonicalName,
-        scientific_name: rec.canonicalName,
-        status: 'extant',
-        habitat: guessHabitat(rec, group.name),
-        clade: rec.class || rec.phylum || group.name,
-        period: null,
-        source: 'gbif',
-        source_id: String(rec.key),
-      });
-    }
-    offset += page.length;
-    if (page.length < limit) {
-      exhausted = true;
-      break;
-    }
-    await sleep(300);
-  }
-
-  return { records, cursorKey, offset, exhausted, wasExhausted, groupName: group.name };
-}
-
-async function upsertAnimal(conn, animal) {
-  const now = new Date().toISOString();
-  const existing = await dbGet(conn, 'SELECT id FROM animals WHERE source = ? AND source_id = ?', [
-    animal.source,
-    animal.source_id,
-  ]);
-
-  if (existing) {
-    await dbRun(
-      conn,
-      `UPDATE animals SET
-         common_name = ?, scientific_name = ?, status = ?,
-         habitat = ?, clade = ?, period = ?, updated_at = ?
-       WHERE source = ? AND source_id = ?`,
-      [animal.common_name, animal.scientific_name, animal.status, animal.habitat, animal.clade, animal.period, now, animal.source, animal.source_id]
-    );
-    return 'updated';
-  }
-
-  await dbRun(
-    conn,
-    `INSERT INTO animals
-       (common_name, scientific_name, status, habitat, clade, period, conservation_status,
-        description, image_url, local_image_path, image_attribution, source, source_id, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, ?)`,
-    [animal.common_name, animal.scientific_name, animal.status, animal.habitat, animal.clade, animal.period, animal.source, animal.source_id, now, now]
-  );
-  return 'inserted';
-}
-
-async function runSync(conn, now) {
-  let inserted = 0;
-  let updated = 0;
-  const summaryLines = [];
-
-  const pbdb = await fetchPbdb(conn).catch((err) => {
-    log(`PBDB fetch failed: ${err.message}`);
-    return null;
-  });
-  const gbif = await fetchGbif(conn, now).catch((err) => {
-    log(`GBIF fetch failed: ${err.message}`);
-    return null;
-  });
-
-  const allRecords = [...(pbdb?.records || []), ...(gbif?.records || [])];
-
-  if (!DRY_RUN) {
-    for (const animal of allRecords) {
-      const result = await upsertAnimal(conn, animal);
-      if (result === 'inserted') inserted += 1;
-      else updated += 1;
-    }
-  } else {
-    for (const animal of allRecords) {
-      log(`[dry-run] would upsert ${animal.source}#${animal.source_id} (${animal.common_name})`);
-    }
-  }
-
-  if (!DRY_RUN && pbdb) {
-    await setCursor(conn, pbdb.cursorKey, pbdb.offset);
-    await setExhausted(conn, pbdb.cursorKey, pbdb.exhausted);
-  }
-  if (pbdb) {
-    if (pbdb.exhausted && !pbdb.wasExhausted) {
-      summaryLines.push(`PBDB dinosaur genera fully caught up (${pbdb.records.length} added this run) — will now just watch for newly described genera.`);
-    } else if (pbdb.wasExhausted && pbdb.records.length > 0) {
-      summaryLines.push(`PBDB had ${pbdb.records.length} newly announced genera since last check.`);
-    } else if (pbdb.wasExhausted) {
-      summaryLines.push(`PBDB: no newly announced genera yet.`);
-    } else {
-      summaryLines.push(`PBDB: +${pbdb.records.length} (offset now ${pbdb.offset}${pbdb.exhausted ? ', now caught up' : ''}).`);
-    }
-  }
-
-  if (!DRY_RUN && gbif) {
-    await setCursor(conn, gbif.cursorKey, gbif.offset);
-    await setExhausted(conn, gbif.cursorKey, gbif.exhausted);
-  }
-  if (gbif) {
-    if (gbif.exhausted && !gbif.wasExhausted) {
-      summaryLines.push(`GBIF ${gbif.groupName} fully caught up (${gbif.records.length} added this run) — will now just watch for newly added species.`);
-    } else if (gbif.wasExhausted && gbif.records.length > 0) {
-      summaryLines.push(`GBIF ${gbif.groupName} had ${gbif.records.length} newly added species since last check.`);
-    } else if (gbif.wasExhausted) {
-      summaryLines.push(`GBIF ${gbif.groupName}: no newly added species yet.`);
-    } else {
-      summaryLines.push(`GBIF ${gbif.groupName}: +${gbif.records.length} (offset now ${gbif.offset}${gbif.exhausted ? ', now caught up' : ''}).`);
-    }
-  }
-
-  for (const line of summaryLines) log(line);
-
-  return { inserted, updated };
 }
 
 async function main() {
@@ -394,12 +133,25 @@ async function main() {
   const db = new duckdb.Database(DB_PATH);
   const conn = db.connect();
 
+  // Adapt the raw callback connection to the { all, get, run } interface the
+  // shared core expects (the same shape as src/main/db/duckdbClient.js).
+  const dbShim = {
+    all: (sql, params = []) => dbAll(conn, sql, params),
+    get: (sql, params = []) => dbGet(conn, sql, params),
+    run: (sql, params = []) => dbRun(conn, sql, params),
+  };
+
   let result = { inserted: 0, updated: 0 };
   let status = 'ok';
   let errorMessage = null;
 
   try {
-    result = await runSync(conn, SIMULATED_NOW || new Date());
+    result = await runAnimalSync({
+      db: dbShim,
+      now: SIMULATED_NOW || new Date(),
+      dryRun: DRY_RUN,
+      log,
+    });
   } catch (err) {
     status = 'error';
     errorMessage = err.message;
